@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        #mycanvas{
+            border:1px solid green;
+            float: left;
+        }
+        #d1{
+            width: 110px;
+            height: 100px;
+            border: 1px solid purple;
+            float: left;
+        }
+        #d2{
+            width: 110px;
+            height: 100px;
+            border: 1px solid purple;
+            float: left;
+        }
+    </style>
+</head>
+<body>
+<canvas id="mycanvas" width="500" height="500"></canvas>
+<div id="d1"></div>
+<div id="d2">
+    <select id="s1">
+        <option value="1">简单</option>
+        <option value="2">中等</option>
+        <option value="3">困难</option>
+    </select>
+    <input type="button" id="button1" value="开始" onclick="star(this)">
+</div>
+<script>
+    var d1 = document.getElementById("d1");
+    var s1 = document.getElementById("s1");
+    var c = document.getElementById("mycanvas");
+    var context = c.getContext("2d");
+    var a = 10,b=10;
+    var n = 5;
+    var m = 10;
+    var key = 2;
+    var map = [];
+    var shiwu = [];
+    var su = 300;
+    var t;
+    function star(bt){
+        if(bt.value=="开始"){
+            switch (parseInt(s1.value)){
+                case 1:
+                    su = 300;
+                    sw(parseInt(s1.value));
+                    break;
+                case 2:
+                    su = 200;
+                    sw(parseInt(s1.value));
+                    break;
+                case 3:
+                    su = 100;
+                    sw(parseInt(s1.value));
+                    break;
+            }
+            t = setInterval(hs,su);
+            bt.value="暂停";
+        }else{
+            clearInterval(t);
+            bt.value="开始";
+        }
+
+    }
+    document.onkeydown= function (e) {
+        var code = e.keyCode-37;
+        switch (code){
+            case 1:
+                key=1;
+                break;
+            case 2:
+                key=2;
+                break;
+            case 3:
+                key=3;
+                break;
+            case 0:
+                key=0;
+                break;
+        }
+    };
+    function sw(a){
+        for(var i=0;i<a;i++){
+            x = Math.floor(Math.random()*50);
+            y = Math.floor(Math.random()*50);
+            context.fillStyle = ranColor();
+            context.fillRect(x*10,y*10,10,10);
+            shiwu.push({'x':x,'y':y});
+        }
+    }
+    function ranColor(){
+        var a = "#";
+        var t = "";
+        for(var i =0 ;i<6;i++){
+            t+=parseInt(Math.random()*16).toString(16);//由一行一个数字变成字符串：一行六个字；
+        }
+        a+=t;//让#跟字符串连接起来;
+        return a;
+    }
+    function hs(){
+        if(a>490||b>490||a<0||b<0){
+            alert("你碰壁啦");
+            window.location.reload();
+        }
+        d1.innerHTML = "当前长度:"+n+"<br/>当前坐标X:"+a/10+"<br/>当前坐标Y:"+b/10;
+        switch(key){
+            case 0:
+                a-=m;
+                break;
+            case 1:
+                b-=m;
+                break;
+            case 2:
+                a+=m;
+                break;
+            case 3:
+                b+=m;
+                break;
+        }
+
+        for(var i=0;i<map.length;i++){
+            if( parseInt(map[i].a)==a && parseInt(map[i].b)==b){
+                alert("你太胖啦，撞到你自己啦");
+                window.location.reload();
+            }
+        }
+        context.fillStyle = ranColor();
+        context.fillRect(a,b,10,10);
+        map.push({'a':a,'b':b});
+        if(map.length>n){
+            var c1=map.shift();
+            context.clearRect(c1['a'],c1['b'],m,m);
+        }
+        for(var i=0;i<shiwu.length;i++){
+            if((parseInt(shiwu[i].x)*10==a)&&(parseInt(shiwu[i].y)*10==b)){
+                n++;
+                sw(1);
+                shiwu.remove(i);
+            }
+        }
+
+    }
+    /**
+     *删除数组指定下标或指定对象
+     */
+    Array.prototype.remove=function(obj){
+        for(var i =0;i <this.length;i++){
+            var temp = this[i];
+            if(!isNaN(obj)){
+                temp=i;
+            }
+            if(temp == obj){
+                for(var j = i;j <this.length;j++){
+                    this[j]=this[j+1];
+                }
+                this.length = this.length-1;
+            }
+        }
+    }
+
+</script>
+</body>
+</html>
