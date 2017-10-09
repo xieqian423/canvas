@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<canvas id="canvas" width="1024" height="728">Canvas is not supported in your browser.</canvas>
+<script src="js/ploygon.js"></script>
+<script>
+    var canvas = document.getElementById("canvas"),
+        context = canvas.getContext("2d");
+
+    var polygons = [],
+            lastState,
+            dragging;
+
+    for(var i=1; i<6; i++){
+        var polygon = new Polygon({
+            centerX: 100*(i-1)+50,
+            centerY: 50 *i,
+            radius: 50,
+            sizes: 3+i,
+            startAngle:0
+        });
+        polygon.fill(context);
+        polygons.push(polygon);
+    }
+
+    function drawPolygon(polygon){
+        polygon.stroke(context);
+        polygon.fill(context);
+    }
+
+    function drawPolygons(){
+        polygons.forEach(function(polygon){
+            drawPolygon(polygon);
+        });
+    }
+
+    function saveDrawingSurface(context){
+        lastState = context.getImageData(0,0,canvas.width, canvas.height);
+    }
+
+    function restoreDrawingSurface(context){
+        context.putImageData(lastState, 0,0);
+    }
+
+
+    canvas.onmousedown = function(e){
+        var x = e.clientX;
+        var y = e.clientY;
+        //dragging = true;
+        saveDrawingSurface(context);
+        polygons.forEach(function(polygon){
+            polygon.createPath(context);
+            if(context.isPointInPath(x,y)){
+                saveDrawingSurface(context);
+                dragging = polygon;
+                return;
+            }
+        });
+    }
+
+    function updatePolygon(x,y){
+        if(dragging){
+            dragging.x = x;
+            dragging.y = y;
+        }
+    }
+    canvas.onmousemove = function(e){
+        if(dragging){
+            var ax = e.clientX;
+            var ay = e.clientY;
+            //鼠标移动每一帧都清楚画布内容，然后重新画圆
+            context.clearRect(0,0,canvas.width,canvas.height);
+            //restoreDrawingSurface(context);
+            //drawPolygons();
+            updatePolygon(ax,ay);
+            drawPolygons();
+        }
+    }
+
+    canvas.onmouseup = function (e) {
+        dragging = null;
+        //restoreDrawingSurface(context);
+    }
+</script>
+</body>
+</html>

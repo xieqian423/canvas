@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        canvas{
+            background: black;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas" width="1024" height="728">Canvas is not supported in your browser.</canvas>
+<script>
+    var canvas = document.getElementById("canvas"),
+            context = canvas.getContext("2d");
+
+    context.beginPath();
+    context.shadowColor = "gold";
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+    context.shadowBlur = 100;
+    context.fillStyle = "lemonchiffon";
+    context.arc(400,100,50,0,2*Math.PI);
+    context.fill();
+
+</script>
+</body>
+</html>
