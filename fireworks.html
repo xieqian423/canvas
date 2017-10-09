@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        html,body{height: 100%;}
+        #win{
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="win"></div>
+<script>
+    (function(){
+        function FireWorks(opts){
+            opts = opts || {};
+            this.pieces = [];
+            this.existPieces = [];
+            this.pos = {
+                x : opts.pos.x,
+                y: opts.pos.y
+            };
+            this.size = 5;
+            this.color = "";
+        }
+
+        //爆炸，产生初始速度各方向的碎片
+        FireWorks.prototype.explode = function(){
+            var i = 0, nums = 100;
+            var v = 3;
+            var angle;
+            for(; i < nums; i++){
+                angle = Math.random()*2*Math.PI;
+                var piece = new Piece({
+                    v: {x:v*Math.cos(angle), y:v*Math.sin(angle)},
+                    pos: this.pos,
+                    context: this.getContext(),
+                    color: this.color
+                });
+                this.pieces.push(piece);
+            }
+        };
+
+        FireWorks.prototype.updatePieces = function(){
+            var i, len = this.pieces.length;
+            var piece;
+            for(i=0; i<len; i++){
+                piece = this.pieces[i];
+                piece.update();
+                piece.render();
+            }
+        };
+
+        FireWorks.prototype.render = function(context){
+            var x = this.pos.x, y = this.pos.y, r = this.size/2;
+            var context = this.getContext();
+            context.beginPath();
+            context.arc(x,y,r,0,2*Math.PI,true);
+            context.closePath();
+            context.fill();
+        };
+
+        FireWorks.prototype.setContext = function(context){
+            this.context = context || this.context;
+        }
+
+        FireWorks.prototype.getContext = function(){
+            return this.context;
+        };
+
+        //斜抛运动
+        function Piece(opts){
+            opts = opts || {};
+
+            this.context = opts.context;
+            this.style = opts.style || {};
+            this.color = opts.color;
+            //初始位置
+            this.pos = {
+                x: opts.pos ? opts.pos.x : 0,
+                y: opts.pos ? opts.pos.y : 0
+            };
+
+            //初始速度
+            this.v = {
+                x: opts.v ? opts.v.x : 0,
+                y: opts.v ? opts.v.y : 0
+            };
+            this.resistance=0.005;
+            this.alpha=1;this.fade=0.97;
+            this.size=3;this.shrink=0.99;
+        }
+
+        Piece.prototype.update = function(){
+            var  t = 1;  //假设一ms更新一次
+            var g = 0.05;  //重力加速度
+            //水平方向速度不变，垂直方向受重力影响
+            this.v.y = this.v.y + g*t;
+            this.pos.x += this.v.x * t;  //x = x0 + v*t
+            this.pos.y = this.pos.y + this.v.y*t;
+            this.alpha *= this.fade;
+            this.size*=this.shrink;
+        }
+
+        Piece.prototype.render = function(context){
+            var x = this.pos.x, y = this.pos.y, r = this.size/2;
+            var context = this.getContext();
+
+            var gradient=context.createRadialGradient(x,y,0.1,x,y,r);
+            gradient.addColorStop(0,"rgba(255, 255, 255, "+this.alpha+")");
+            gradient.addColorStop(0.9,"hsla("+this.color+", 100%, 50%, 1)");
+            gradient.addColorStop(1,"rgba(0, 0, 0, 1)");
+            context.fillStyle=gradient;
+            context.beginPath();
+            context.arc(x,y,r,0,2*Math.PI,true);
+            context.closePath();
+            context.fill()
+        };
+
+        Piece.prototype.exist = function(){
+            if(this.alpha>=0.05&&this.size>0.8){
+                return true
+            }else{
+                return false
+            }
+        }
+
+
+        Piece.prototype.setStyle = function(style){
+            this.style = style || this.style || {
+                fillStyle: "red"
+            }
+        };
+
+        Piece.prototype.getContext = function(){
+            return this.context;
+        };
+
+        Piece.prototype.setContext = function(context){
+            this.context = context || this.context;
+        }
+
+        window.Fireworks = FireWorks;
+    })();
+
+    function init(){
+        var win = document.getElementById("win"),
+                style = window.getComputedStyle(win, null);
+        var canvas = document.createElement("canvas");
+        canvas.innerText = "不支持canvas";
+        win.appendChild(canvas);
+        canvas.width = parseInt(style.width);
+        canvas.height = parseInt(style.height);
+        canvas.style.background = "black";
+
+        var SCREEN_WIDTH = parseInt(canvas.width),
+                SCREEN_HEIGHT = parseInt(canvas.height);
+
+        var context = canvas.getContext("2d");
+//        context.fillStyle="rgba(0,0,0,0.05)";
+//        context.fillRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+
+        canvas.addEventListener("click", function(e){
+            var target = e.target.event;
+
+            context.clearRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+            context.beginPath();
+            var fws = new Fireworks({
+                pos:{x: e.clientX, y:e.clientY}
+            });
+            fws.color=Math.floor(Math.random()*360/10)*10;
+            fws.setContext(context);
+            fws.render();
+            fws.explode();
+            fws.updatePieces();
+            function rf(){
+                context.fillStyle="rgba(0,0,0,0.05)";
+                context.fillRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+                var i, len = fws.pieces.length;
+                fws.existPieces = [];
+                var piece;
+                for(i=0; i < len; i++){
+                    piece = fws.pieces[i];
+                    piece.update();
+                    if(piece.exist()){
+                        fws.existPieces.push(piece);
+                        piece.render();
+                    }
+                }
+
+                fws.pieces = fws.existPieces;
+                if(len>0){
+                    window.requestAnimationFrame(rf);
+                }else{
+                    context.clearRect(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+                }
+            }
+
+            window.requestAnimationFrame(rf);
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
