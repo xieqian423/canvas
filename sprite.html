@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        body,h1,h2,h3,p,quote,small,form,input,ul,li,ol,label,div,canvas{margin:0;padding:0;}
+        body{color:#dddddd;font-size:13px;background: #302b23;font-family:Arial, Helvetica, sans-serif;}
+
+
+        canvas{background:cornflowerblue;cursor:pointer;box-shadow:3px 3px 6px rgba(0,0,0,0.5);}
+    </style>
+</head>
+<body>
+<div style="width:500px;height:500px;margin:20px auto 0 auto">
+    <canvas id="canvas" width="500" height="500"></canvas>
+</div>
+    <script>
+        var Sprite = function (name, painter, behaviors) {
+            this.left = 0;
+            this.top = 0;
+            this.width = 0;
+            this.height = 0;
+            this.velocityX = 0;
+            this.velocityY = 0;
+            this.visible = true;
+            this.animating = false;
+            this.painter = undefined;
+            this.behaviors = behaviors || [];
+
+            if (name) this.name = name;
+            painter && (this.painter = painter);
+
+            return this;
+         };
+
+        Sprite.prototype = {
+            paint: function (context) {
+                if (this.painter !== undefined && this.visible) {
+                    this.painter.paint(this, context);
+                }
+            },
+            uodate: function (context, time) {
+                for (var i = 0; i < this.behaviors.length; ++i) {
+                    this.behaviors[i].excute(this, context, time);
+                }
+            }
+        }
+
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var ball;
+        // var RADIUS = 75;
+
+        /*
+        ball = new Sprite('ball', {
+            paint: function (sprite, context) {
+                context.beginPath();
+                context.arc(sprite.left + sprite.width/2, sprite.top + sprite.height/2, RADIUS, 0, Math.PI*2, false);
+                context.clip();
+
+                context.shadowColor = 'rgb(0,0,0)';
+                context.shadowOffsetX = -4;
+                context.shadowOffsetY = -4;
+                context.shadowBlur = 8;
+
+                context.lineWidth = 2;
+                context.strokeStyle = 'rgb(100,100,195)';
+
+                context.fillStyle = 'rgba(30,144,255,0.15)';
+                context.fill();
+                context.stroke();
+            }
+        });
+
+        function drawGrid (color, stepx, stepy) {
+
+        }
+
+        drawGrid('lightgray', 10, 10);
+        ball.left = 320;
+        ball.top = 160;
+        ball.paint(context);
+        */
+
+        var CLOCK_RADIUS = canvas.width/2 - 35;
+        var HOUR_HAND_TRUNCATION = 55;
+
+        var ballPainter = {
+            paint: function (sprite, context) {
+                var x = sprite.left + sprite.width/2;
+                var y = sprite.top + sprite.height/2;
+                var radius = sprite.width/2;
+
+                var width = sprite.width;
+                var height = sprite.height;
+
+                context.save();
+                context.beginPath();
+                context.arc(x,y,radius,0,Math.PI*2, false);
+                context.clip();
+
+                context.shadowColor = 'rgb(0,0,0)';
+                context.shadowOffsetX = -4;
+                context.shadowOffsetY = -4;
+                context.shadowBlur = 8;
+
+                context.lineWidth = 2;
+                context.fillStyle = 'rgba(218,165,32,0.1)';
+                context.strokeStyle = 'rgb(100,100,195)';
+                context.fill();
+                context.stroke();
+
+                context.restore();
+            }
+        };
+
+        ball = new Sprite('ball', ballPainter);
+
+        // functions
+        function drawGrid (color, stepx, stepy) {
+            // omitted for brevity. see example 2.13
+            // for a complete listing
+            // context.strokeStyle = color;
+            // context.lineWidth =0.5;
+        }
+
+        function drawHand (loc, isHour) {
+            // ball.paint(context);
+
+            var angle=(Math.PI*2)*(loc/60)-Math.PI/2,
+                    handRadius=isHour?CLOCK_RADIUS-HOUR_HAND_TRUNCATION:CLOCK_RADIUS,
+
+                    lineEnd={
+                        x:canvas.width/2+Math.cos(angle)*(handRadius-ball.width/2),
+                        y:canvas.height/2+Math.sin(angle)*(handRadius-ball.width/2)
+                    };
+            context.beginPath();
+            //context.strokeStyle='rgba(0,0,0,0.5)';
+            context.lineWidth=2;
+            context.moveTo(canvas.width/2,canvas.height/2);
+            context.lineTo(lineEnd.x,lineEnd.y);
+            context.stroke();
+
+            ball.left=canvas.width/2+Math.cos(angle)*handRadius-ball.width/2;
+            ball.top=canvas.height/2+Math.sin(angle)*handRadius-ball.width/2;
+
+            // ballPainter.paint(ball,context);
+            ball.paint(context);
+
+        }
+
+        function drawClock () {
+            drawClockFace();
+            drawHands();
+        }
+
+        function drawHands () {
+            var date = new Date();
+            var hour = date.getHours();
+
+            // seconds
+            ball.width = 20;
+            ball.height = 20;
+            drawHand(date.getSeconds(), false);
+
+            // minutes
+            hour = hour > 12 ? hour -12 : hour;
+            ball.width = 35;
+            ball.height = 35;
+            drawHand(date.getMinutes(), false);
+            // HOurs
+            ball.width = 50;
+            ball.height = 50;
+            drawHand(hour*5+(date.getMinutes()/60)*5, true);
+
+            // centerpiece
+            ball.width = 10;
+            ball.height = 10;
+            ball.left = canvas.width/2 - ball.width/2;
+            ball.top = canvas.height/2 - ball.height/2;
+            ballPainter.paint(ball, context);
+        }
+
+        function drawClockFace () {
+            context.beginPath();
+            context.arc(canvas.width/2, canvas.height/2, CLOCK_RADIUS, 0, Math.PI*2, false);
+
+            context.save();
+            context.strokeStyle = 'rgb(0,0,0,0.2)';
+            context.stroke();
+            context.restore();
+        }
+
+        function animate () {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid('lightgray', 10, 10);
+            drawClock();
+            window.requestAnimationFrame(animate);
+        }
+
+        // initialization
+        context.lineWidth = 0.5;
+        context.strokeStyle = 'rgba(0,0,0,0.2)';
+        context.shadowColor = 'rgba(0,0,0,0.5)';
+        context.shadowOffsetX = 2;
+        context.shadowOffsetY = 2;
+        context.shadowBlur = 4;
+        context.stroke();
+
+        window.requestAnimationFrame(animate);
+        drawGrid('lightgray', 10, 10);
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

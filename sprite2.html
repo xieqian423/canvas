@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        body,h1,h2,h3,p,quote,small,form,input,ul,li,ol,label,div,canvas{margin:0;padding:0;}
+        body{color:#dddddd;font-size:13px;background: #302b23;font-family:Arial, Helvetica, sans-serif;}
+
+
+        canvas{background:cornflowerblue;cursor:pointer;box-shadow:3px 3px 6px rgba(0,0,0,0.5);}
+    </style>
+</head>
+<body>
+    <div style="width:500px;height:500px;margin:20px auto 0 auto">
+        <canvas width='500' height='500' id='canvas'></canvas>
+    </div>
+    <script src="js/imagePainter.js"></script>
+<script>
+    var Sprite = function (name, painter, behaviors) {
+        this.left = 0;
+        this.top = 0;
+        this.width = 0;
+        this.height = 0;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.visible = true;
+        this.animating = false;
+        this.painter = undefined;
+        this.behaviors = behaviors || [];
+
+        if (name) this.name = name;
+        painter && (this.painter = painter);
+
+        return this;
+    };
+
+    Sprite.prototype = {
+        paint: function (context) {
+            if (this.painter !== undefined && this.visible) {
+                this.painter.paint(this, context);
+            }
+        },
+        uodate: function (context, time) {
+            for (var i = 0; i < this.behaviors.length; ++i) {
+                this.behaviors[i].excute(this, context, time);
+            }
+        }
+    }
+
+    var canvas=document.getElementById('canvas'),
+            context=canvas.getContext('2d');
+    var bomb = new Sprite('bomb', new ImagePainter('https://www3.res.meizu.com/static/cn/pro7/fenetre/images/wallpaper-bg_6d4f6ef.jpg'));
+
+    function animate () {
+        context.clearRect(0,0, canvas.width, canvas.height);
+        bomb.paint(context);
+        window.requestAnimationFrame(animate);
+    }
+
+    bomb.left = 220;
+    bomb.top = 80;
+    bomb.width = 180;
+    bomb.height = 130;
+
+    window.requestAnimationFrame(animate);
+
+</script>
+</body>
+</html>

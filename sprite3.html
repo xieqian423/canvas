@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="gbk">
+    <title>精灵表动画实例</title>
+    <style type="text/css">
+        #draw-target {
+            width:480px;
+            height:320px;
+            background-color:#ccf;
+            position:relative;
+            border:1px solid;
+        }
+    </style>
+    <script type="text/javascript">
+
+        function CanvasSprite(params) {
+            this.x=params.x;//精灵在画布中的x坐标
+            this.y=params.y;
+            this.index=params.index;//精灵图片的索引，从左到右，从0开始
+            this.ctx = params.ctx;//画布的上下文，绘图的地方
+            this.width = params.width;//精灵图片的宽
+            this.height = params.height;
+            this.imagesWidth = params.imagesWidth;//精灵表的宽
+            //精灵在精灵表中的位置
+            this.vOffset = Math.floor(this.index*this.width / this.imagesWidth) * this.height;
+            this.hOffset = (this.index*this.width) % this.imagesWidth;
+
+            this.hide = false;
+            this.img = new Image();
+            this.img.src = params.images;//精灵表图片
+            this.act=params.act;//精灵的动作行为
+        }
+        //在画布中绘制精灵
+        CanvasSprite.prototype.draw=function() {
+            if (this.hide) {
+                return;
+            }
+            this.ctx.drawImage(this.img, this.hOffset, this.vOffset, this.width, this.height,this.x , this.y, this.width, this.height);
+        }
+
+        //改变精灵的索引
+        CanvasSprite.prototype.changeImage=function(index) {
+            this.index =index;
+            this.vOffset = Math.floor(this.index*this.width / this.imagesWidth) * this.height;
+            this.hOffset = (this.index*this.width) % this.imagesWidth;
+        }
+        CanvasSprite.prototype.show=function() {
+            this.hide = false;
+        }
+
+        CanvasSprite.prototype.hide=function() {
+            this.hide = true;
+        }
+
+        CanvasSprite.prototype.destroy=function () {
+            return;
+        }
+
+        //精灵的行为，交给实现了ac（）方法的对象
+        CanvasSprite.prototype.move= function(drawTarget) {
+            this.act.ac(this,drawTarget);
+        }
+        //精灵1的动作
+        function action(){
+            this.ac=function(canvasSprite,drawTarget){
+                var maxX=drawTarget.width - 64;
+                var maxY= drawTarget.height - 64;
+                canvasSprite.x += 2;
+                canvasSprite.y += 2;
+                canvasSprite.index++;
+                if(canvasSprite.index>=5) canvasSprite.index=0;
+                if(canvasSprite.x>maxX) canvasSprite.x-=2;
+                if(canvasSprite.y>maxY) canvasSprite.y-=2;
+                canvasSprite.changeImage(canvasSprite.index);
+            }
+        }
+        //精灵2的动作
+        function action1(){
+            this.ac=function(canvasSprite,drawTarget){
+                canvasSprite.index++;
+                if(canvasSprite.index>=4) canvasSprite.index=0;
+                canvasSprite.changeImage(canvasSprite.index);
+            }
+        }
+
+
+        window.onload=function() {
+            var canvas = document.getElementById('draw-target');
+            var ctx=canvas.getContext("2d");
+            var drawTarget=document.getElementById("draw-target");
+
+            //精灵1的参数
+            var para={
+                x:0,
+                y:0,
+                index:0,
+                images: 'http://dl2.iteye.com/upload/attachment/0093/3680/e47121b8-31b7-3fd9-934c-bfc69b82257a.png',
+                imagesWidth: 256,
+                width: 64,
+                height: 64,
+                ctx:ctx,
+                act:new action()
+            }
+            //精灵2的参数
+            var para1={
+                x:200,
+                y:0,
+                index:0,
+                images: 'http://dl2.iteye.com/upload/attachment/0093/3682/b143e797-fcc5-3b67-949d-60003f8b5dfd.png',
+                imagesWidth: 240,
+                width: 60,
+                height: 60,
+                ctx:ctx,
+                act:new action1()
+            }
+
+            var sprite1=new CanvasSprite(para);
+            var sprite2=new CanvasSprite(para1);
+
+
+            function moveAll() {
+                ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+                sprite2.move(drawTarget);
+                sprite1.move(drawTarget);
+                sprite2.draw();
+                sprite1.draw();
+                setTimeout(moveAll, 50);
+            }
+            moveAll();
+
+        }
+    </script>
+</head>
+<body>
+精灵动画.
+
+<canvas id="draw-target" width = 480 height = 320> 浏览器不支持HTML5
+</canvas>
+
+</body>
+</html>
