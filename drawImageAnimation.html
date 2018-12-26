@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        canvas{
+            background: black;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas" width="1024" height="728">Canvas is not supported in your browser.</canvas>
+<script>
+    var canvas = document.getElementById("canvas"),
+            context = canvas.getContext("2d");
+
+    var image = new Image();
+    image.src='images/2.png';
+    image.onload = function () {
+        context.drawImage(image,0,0,64,64,0,0,64,64);
+    }
+
+    var img = new Image();
+    img.src='images/1.png';
+    img.onload = function () {
+        context.drawImage(img,0,0,64,64,0,0,64,64);
+    }
+
+    var dw = 64, dh = 64, index = 1;
+    var dw1 = 60, dh1 = 60, index = 1;
+    var timer = null;
+    timer = setInterval(function () {
+        context.clearRect(0,0,canvas.width,canvas.height); 
+        context.drawImage(image,dw*(index-1),0,dw,dh,dw*(index-1),0,dw,dh);
+        context.drawImage(img,dw1*(index-1),0,dw1,dh1,dw1*(index-1),dh1,dw1,dh1);
+        index++;
+        if (index >= 5) {
+            clearInterval(timer);
+        }
+    }, 50);
+
+    /*
+    function scroll () {
+        context.clearRect(0,0,canvas.width,canvas.height); 
+        context.drawImage(image,dw*(index-1),0,dw,dh,dw*(index-1),0,dw,dh);
+        index++;
+        window.requestAnimationFrame(scroll);
+    }
+    scroll();
+    */
+
+
+</script>
+</body>
+</html>

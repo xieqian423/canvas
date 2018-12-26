@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body{
+            position: relative;
+        }
+        canvas{
+            background: black;
+        }
+
+        input{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <output id="scaleOutput">1.0</output>
+    </div>
+    <canvas id="canvas" width="800" height="800">Canvas is not supported in your browser.</canvas>
+    <input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0"/>
+
+<script>
+    var canvas = document.getElementById("canvas"),
+            context = canvas.getContext("2d");
+    var slider = document.getElementById("scale-range");
+    var scale =  slider.value;
+    var imgW, imgH;
+
+    var img = new Image();
+    img.onload = function () {
+        imgW = img.width;
+        imgH = img.height;
+        drawImageScale(slider.value);
+    }
+    img.src='images/popup.png';
+
+    slider.onmousemove = function () {
+        scale = slider.value;
+        drawImageScale(scale);
+    };
+
+    function drawImageScale (scale) {
+        var imgWidth = imgW * scale;
+        var imgHeight = imgH * scale;
+
+        // 目标图像的坐标
+        var dx = canvas.width/2 - imgWidth/2;
+        var dy = canvas.height/2 - imgHeight/2;
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, dx, dy, imgWidth, imgHeight);
+    }
+</script>
+</body>
+</html>

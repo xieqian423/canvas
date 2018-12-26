@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>离屏canvas</title>
+    <style>
+        body{
+            position: relative;
+        }
+        canvas{
+            background: black;
+        }
+
+        input{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <output id="scaleOutput">1.0</output>
+</div>
+<canvas id="canvas" width="800" height="800">Canvas is not supported in your browser.</canvas>
+<input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0"/>
+
+<script>
+    var canvas = document.getElementById("canvas"),
+            context = canvas.getContext("2d");
+    var offscreenCvs = document.createElement('canvas');
+    var offscreenCtx = offscreenCvs.getContext('2d');
+    offscreenCvs.width = canvas.width;
+    offscreenCvs.height = canvas.height;
+
+    var slider = document.getElementById("scale-range");
+    var scale =  slider.value;
+    var MINIMUM_SCALE = 1.0, MAXIMUM_SCALE = 3.0;
+
+    var scaleOutput = document.getElementById('scaleOutput');
+    //  
+
+    var img = new Image();
+    img.onload = function () {
+        //imgW = img.width;
+        // imgH = img.height;
+        // drawImageScale(slider.value);
+        context.drawImage(img, 0, 0, img.width, img.height);
+        offscreenCtx.drawImage(img, 0, 0, img.width, img.height);
+        
+        drawWatermark(context);
+        drawWatermark(offscreenCtx);
+        drawScaleText(slider.value);
+        // 
+    }
+    var imgW, imgH;
+    img.src='images/popup.png';
+
+    slider.onchange = function (e) {
+        scale = e.target.value // slider.value;
+        drawImageScale(scale);
+        drawScaleText(scale);
+    };
+
+    function drawImageScale (scale) {
+        var w = canvas.width;
+        var h = canvas.height;
+
+        var sw = w * scale;
+        var sh = h * scale;
+
+        var dx = w/2 - sw/2;
+        var dy = h/2 - sh/2;
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(offscreenCvs, 0, 0, w, h, dx, dy, sw, sh);
+    }
+
+    function drawWatermark (ctx) {
+        var lineOne = 'Copyright',
+            lineTwo = 'Acme, Inc.',
+            textMetrics = null,
+            FONT_HEIGHT = 128;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(100,140,230,0.5)';
+        ctx.strokeStyle = 'yellow';
+        ctx.shadowColor = 'rgba(50,50,50,1.0)';
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+        ctx.shaodowBlur = 10;
+
+        ctx.font = FONT_HEIGHT + 'px Arial';
+        textMetrics = ctx.measureText(lineOne);
+        ctx.translate(canvas.width/2, canvas.height/2);
+        ctx.fillText(lineOne, -textMetrics.width/2, 0);
+        ctx.strokeText(lineOne, -textMetrics.width/2, 0);
+
+        textMetrics = ctx.measureText(lineTwo);
+        // ctx.translate(canvas.width/2, canvas.height/2);
+        ctx.fillText(lineTwo, -textMetrics.width/2, FONT_HEIGHT);
+        ctx.strokeText(lineTwo, -textMetrics.width/2, FONT_HEIGHT);
+        ctx.restore();
+    }
+
+    function drawScaleText (value) {
+        var text = parseFloat(value).toFixed(2);
+        var percent = parseFloat(value - MINIMUM_SCALE) / parseFloat(MAXIMUM_SCALE - MINIMUM_SCALE);
+
+        scaleOutput.innerText = text;
+        percent = percent < 0.35 ? 0.35 : percent;
+        scaleOutput.style.fontSize = percent * MAXIMUM_SCALE/1.5 + 'em';
+    }
+</script>
+</body>
+</html>
