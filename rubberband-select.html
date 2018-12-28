@@ -22,62 +22,122 @@
 <div>
     <output id="scaleOutput">1.0</output>
 </div>
-<canvas id="canvas" width="800" height="800">Canvas is not supported in your browser.</canvas>
-<input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0"/>
+<canvas id="canvas" width="300" height="150">Canvas is not supported in your browser.</canvas>
+<!--<input type="range" id="scale-range" min="0.5" max="3.0" step="0.01" value="1.0"/>-->
+<input type="button" value="reset" id="resetBtn">
 
 <script>
     var canvas = document.getElementById("canvas"),
             context = canvas.getContext("2d");
+
+    context.lineWidth = 1.0;
+    context.strokeStyle = 'navy';
 
     var imageData, // 捕获的像素
         mousedown = {},
         rubberbandRectangle = {},
         dragging = false;
 
+    var img = new Image();
+
+    document.getElementById("resetBtn").onclick = function () {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+
     // 鼠标事件
     canvas.onmousedown = function (e) {
         var loc = windowToCanvas(canvas, e.clientX, e.clientY);
+        e.preventDefault();
+        rubberbandStart(loc.x, loc.y);
     }
 
     canvas.onmousemove = function (e) {
 
         if (dragging) {
-            
+            var loc = windowToCanvas(canvas, e.clientX, e.clientY);
+            rubberbandStretch(loc.x, loc.y);
         }
-        var loc = windowToCanvas(canvas, e.clientX, e.clientY);
     }
     canvas.onmouseup = function (e) {
-        
+        rubberbandEnd();
     }
 
     function windowToCanvas (canvas, mouse_x, mouse_y) {
-        var canvasRectangle = canvas.getBoundingRect();
+        var canvasRectangle = canvas.getBoundingClientRect();
         return {
             x: mouse_x - canvasRectangle.left,
             y: mouse_y - canvasRectangle.top
         };
     }
 
-    function captureRubberbandPixels () {
-        imageData = context.getImageData();
-    }
-
     function rubberbandStart (cx, cy) { // 参数为相对canvas坐标
         mousedown.x = cx;
         mousedown.y = cy;
+
+        rubberbandRectangle.left = mousedown.x;
+        rubberbandRectangle.top = mousedown.y;
 
         dragging = true;
     }
 
     function rubberbandStretch (cx, cy) {
-        
+        if (rubberbandRectangle.width > 2 * context.lineWidth && rubberbandRectangle.height > 2 * context.lineWidth){
+            if(imageData !== undefined) {
+                restoreRubberbandPixels();
+            }
+        }
+
+        setRubberbandRectangle(cx, cy);
+
+        if (rubberbandRectangle.width > 2 * context.lineWidth && rubberbandRectangle.height > 2 * context.lineWidth) {
+            updateRubberband();
+        }
+
     }
 
     function rubberbandEnd () {
+        context.drawImage(canvas,
+            rubberbandRectangle.left + context.lineWidth * 2, rubberbandRectangle.top + context.lineWidth * 2,
+            rubberbandRectangle.width - 4 * context.lineWidth, rubberbandRectangle.height - 4 * context.lineWidth,
+            0, 0, canvas.width, canvas.height);
         dragging = false;
+        imageData = undefined;
     }
 
-    var img = new Image();
+    function setRubberbandRectangle(x, y) {
+        rubberbandRectangle.left = Math.min(x, mousedown.x);
+        rubberbandRectangle.top = Math.min(y, mousedown.y);
+
+        rubberbandRectangle.width = Math.abs(x - mousedown.x);
+        rubberbandRectangle.height = Math.abs(y - mousedown.y);
+    }
+
+    function updateRubberband() {
+        captureRubberbandPixels();
+        drawRubberband();
+    }
+
+    function captureRubberbandPixels () {
+        imageData = context.getImageData(rubberbandRectangle.left,
+                                        rubberbandRectangle.top,
+                                        rubberbandRectangle.width,
+                                        rubberbandRectangle.height);
+    }
+
+    function restoreRubberbandPixels() {
+        context.putImageData(imageData, rubberbandRectangle.left, rubberbandRectangle.top);
+
+    }
+
+    function drawRubberband() {
+        context.strokeRect(rubberbandRectangle.left + context.lineWidth,
+                            rubberbandRectangle.top + context.lineWidth,
+                            rubberbandRectangle.width - 2 * context.lineWidth,
+                            rubberbandRectangle.height - 2 * context.lineWidth);
+    }
+
+
     img.onload = function () {
         //imgW = img.width;
         // imgH = img.height;
@@ -92,13 +152,6 @@
     }
     var imgW, imgH;
     img.src='images/popup.png';
-
-    slider.onchange = function (e) {
-        scale = e.target.value // slider.value;
-        drawImageScale(scale);
-        drawScaleText(scale);
-    };
-
     function drawImageScale (scale) {
         var w = canvas.width;
         var h = canvas.height;

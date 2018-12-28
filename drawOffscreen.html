@@ -54,7 +54,8 @@
         // 
     }
     var imgW, imgH;
-    img.src='images/popup.png';
+    img.src='images/popup.png' + '?' + new Date().getTime();
+    img.setAttribute('crossOrigin', '');
 
     slider.onchange = function (e) {
         scale = e.target.value // slider.value;
